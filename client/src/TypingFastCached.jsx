@@ -14,7 +14,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
  *  - autoSubmit (boolean) defaults true
  */
 export default function TypingFastCached({ problem, onFinish, autoSubmit = true }) {
-  const text = problem?.text ?? "";
+  const text = problem?.code ?? problem?.text ?? "";
   const chars = [...text]; // preserves spaces/newlines
   const containerRef = useRef(null);
   const promptRef = useRef(null);
@@ -26,6 +26,7 @@ export default function TypingFastCached({ problem, onFinish, autoSubmit = true 
   const [pos, setPos] = useState(0);
   const startTsRef = useRef(null);
   const finishedRef = useRef(false);
+  const [report, setReport] = useState(null);
 
   // --- compute and cache spans' rects relative to container ---
   function computeSpanRects() {
@@ -112,6 +113,7 @@ export default function TypingFastCached({ problem, onFinish, autoSubmit = true 
     finishedRef.current = false;
     startTsRef.current = null;
     setPos(0);
+    setReport(null);
     // clear classes & dataset
     spansRef.current.forEach((s) => {
       if (!s) return;
@@ -156,6 +158,7 @@ export default function TypingFastCached({ problem, onFinish, autoSubmit = true 
         rawText: typedStr,
         durationMs,
       };
+      setReport({ wpm, accuracy, durationMs, rawText: typedStr });
       if (autoSubmit) {
         fetch("/api/attempts", {
           method: "POST",
@@ -296,89 +299,116 @@ export default function TypingFastCached({ problem, onFinish, autoSubmit = true 
     <div className="typing-root" onClick={() => inputRef.current && inputRef.current.focus()}>
       <h2 style={{ margin: "8px 0" }}>{problem.title}</h2>
 
-      <div
-        ref={containerRef}
-        className="prompt-wrapper"
-        style={{
-          position: "relative",
-          maxHeight: 380,
-          overflow: "auto",
-          padding: 8,
+      {report ? (
+        <div style={{
+          background: "#1e293b",
+          color: "#e6eef3",
           borderRadius: 8,
-        }}
-      >
-        <div
-          ref={promptRef}
-          className="prompt"
-          style={{
-            whiteSpace: "pre-wrap",
-            fontFamily: "ui-monospace, Menlo, Monaco, 'Courier New', monospace",
-            fontSize: 15,
-            padding: 12,
-            borderRadius: 8,
-            background: "#0f1720",
-            color: "#e6eef3",
-            border: "1px solid #1f2933",
-            lineHeight: 1.5,
-          }}
-        >
-          {chars.map((c, i) => (
-            <span
-              key={i}
-              ref={(el) => {
-                spansRef.current[i] = el;
+          padding: 20,
+          margin: "16px 0",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+        }}>
+          <h3>Test Summary</h3>
+          <div>WPM: <b>{report.wpm}</b></div>
+          <div>Accuracy: <b>{report.accuracy}%</b></div>
+          <div>Time: <b>{Math.round(report.durationMs / 1000)}s</b></div>
+          <div style={{marginTop:8}}>
+            <div style={{fontWeight:'bold'}}>Your Typed Text:</div>
+            <pre style={{background:'#0f1720',color:'#e6eef3',padding:12,borderRadius:6,overflowX:'auto'}}>{report.rawText}</pre>
+          </div>
+          <button onClick={fullReset} style={{...btnStyle, marginTop:12}}>Try Again</button>
+        </div>
+      ) : (
+        <>
+          <div
+            ref={containerRef}
+            className="prompt-wrapper"
+            style={{
+              position: "relative",
+              maxHeight: 380,
+              overflow: "auto",
+              padding: 8,
+              borderRadius: 8,
+            }}
+          >
+            <div
+              ref={promptRef}
+              className="prompt"
+              style={{
+                whiteSpace: "pre-wrap",
+                fontFamily: "ui-monospace, Menlo, Monaco, 'Courier New', monospace",
+                fontSize: 15,
+                padding: 12,
+                borderRadius: 8,
+                background: "#0f1720",
+                color: "#e6eef3",
+                border: "1px solid #1f2933",
+                lineHeight: 1.5,
               }}
-              className="prompt-char"
-              data-idx={i}
             >
-              {c}
-            </span>
-          ))}
-        </div>
+              {chars.map((c, i) => (
+                c === "\n" ? (
+                  <span key={i} style={{display:'block',height:'0'}}></span>
+                ) : (
+                  <span
+                    key={i}
+                    ref={(el) => {
+                      spansRef.current[i] = el;
+                    }}
+                    className="prompt-char"
+                    data-idx={i}
+                  >
+                    {c}
+                  </span>
+                )
+              ))}
+            </div>
 
-        {/* absolute caret element (moved with translate3d) */}
-        <div
-          ref={caretRef}
-          className="typing-caret"
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            width: 2,
-            height: 18,
-            background: "#7dd3fc",
-            transform: "translate3d(0,0,0)",
-            transition: "transform 0.08s linear",
-            willChange: "transform",
-            pointerEvents: "none",
-            borderRadius: 1,
-          }}
-        />
-      </div>
+            {/* absolute caret element (moved with translate3d) */}
+            <div
+              ref={caretRef}
+              className="typing-caret"
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                width: 2,
+                height: 18,
+                background: "#7dd3fc",
+                transform: "translate3d(0,0,0)",
+                transition: "transform 0.08s linear",
+                willChange: "transform",
+                pointerEvents: "none",
+                borderRadius: 1,
+              }}
+            />
+          </div>
 
-      {/* hidden input to capture keystrokes */}
-      <input
-        ref={inputRef}
-        onKeyDown={handleKeyDown}
-        onPaste={(e) => e.preventDefault()}
-        style={{ position: "absolute", opacity: 0, left: -9999 }}
-        autoComplete="off"
-        spellCheck="false"
-      />
+          {/* hidden input to capture keystrokes */}
+          <input
+            ref={inputRef}
+            onKeyDown={handleKeyDown}
+            onPaste={(e) => e.preventDefault()}
+            style={{ position: "absolute", opacity: 0, left: -9999 }}
+            autoComplete="off"
+            spellCheck="false"
+          />
 
-      <div style={{ marginTop: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ color: "#9aa6b2", display: "flex", gap: 12 }}>
-          <div>Elapsed: {elapsedSec}s</div>
-          <div>WPM: {currentWpm}</div>
-          <div>Accuracy: {currentAcc}%</div>
-        </div>
+          <div style={{ marginTop: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ color: "#9aa6b2", display: "flex", gap: 12 }}>
+              <div>Elapsed: {elapsedSec}s</div>
+              <div>WPM: {currentWpm}</div>
+              <div>Accuracy: {currentAcc}%</div>
+            </div>
 
-        <div>
-          <button onClick={fullReset} style={btnStyle}>
-            Reset
-          </button>
-        </div>
-      </div>
+            <div>
+              <button onClick={fullReset} style={btnStyle}>
+                Reset
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       <style>{`
         .prompt-char { display:inline-block; min-width:6px; }
