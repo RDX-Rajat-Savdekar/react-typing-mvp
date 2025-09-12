@@ -1,0 +1,44 @@
+{
+  "problems": [
+    {
+      "id": "p1",
+      "title": "Reverse String",
+      "text": "Write a function to reverse a string.",
+      "difficulty": "easy"
+    },
+    {
+      "id": "p2",
+      "title": "Two Sum",
+      "text": "Given array nums and target, return indices of the two numbers such that they add up to target.",
+      "difficulty": "easy"
+    },
+    {
+      "id": "p3",
+      "title": "FizzBuzz",
+      "text": "Write a program that prints the numbers from 1 to n. For multiples of three print 'Fizz' instead of the number and for the multiples of five print 'Buzz'.",
+      "difficulty": "easy"
+    }
+  ],
+  "attempts": [
+    {
+      "id": "MnZbB6vXhVHmTUe2ddiQY",
+      "user": "anon",
+      "problemId": "p1",
+      "wpm": 44,
+      "accuracy": 7,
+      "rawText": "How do i know what should i type here man\n",
+      "durationMs": 11419,
+      "createdAt": 1757714831315
+    },
+    {
+      "id": "vwNKh8gJuZZLaeyK1LM9Y",
+      "user": "anon",
+      "problemId": "p3",
+      "wpm": 55,
+      "accuracy": 28,
+      "rawText": "Write a program that prints the number from 1 to n. For multiples of three print 'Fizz' instead of number and for the multiples of five print 'Buzz'.",
+      "durationMs": 32747,
+      "createdAt": 1757714916248
+    }
+  ]
+}
