@@ -28,4 +28,4 @@ A minimal typing test web application with a React + Vite frontend and a Node.js
 - Enhance leaderboard
 
 ---
-Feel free to fork, clone, and contribute!
+Feel free to fork, clone, and contribute anytime, anywhere!
